@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "480039567368",
+    "project_id": "amsys-768ac",
+    "storage_bucket": "amsys-768ac.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480039567368:android:de51dbe81a6475ce6811bd",
+        "android_client_info": {
+          "package_name": "com.example.finger_print"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "480039567368-ao86dkc37pq71eqeqcrtg0p9c57v5k38.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.finger_print",
+            "certificate_hash": "25eff5238711823ea35f5d1f161b9c1b5e56ea08"
+          }
+        },
+        {
+          "client_id": "480039567368-52ccg3qlrshigjoabld6n54udam7m9i5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChMIn0XHLz96pRuBX13ztxiotJ7Qu5oWk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "480039567368-52ccg3qlrshigjoabld6n54udam7m9i5.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "480039567368-2k8pki1l5im5iom3n4pr03imn4gopf50.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.fingerPrint"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

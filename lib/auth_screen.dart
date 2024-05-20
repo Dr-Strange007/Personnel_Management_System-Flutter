@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'fingerprint_login_page.dart';
+
+import 'geo_fence.dart';
 
 class AuthScreen extends StatefulWidget {
   @override
@@ -50,7 +51,7 @@ class _AuthScreenState extends State<AuthScreen> {
         Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => FingerprintLoginPage(),
+              builder: (context) => MyGeoHomePage(),
             )
         );
       } else {
@@ -77,7 +78,7 @@ class _AuthScreenState extends State<AuthScreen> {
       Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => FingerprintLoginPage(),
+            builder: (context) => MyGeoHomePage(title: "Geo Fenceing"),
           )
       );
     } catch (e) {
@@ -96,7 +97,7 @@ class _AuthScreenState extends State<AuthScreen> {
         Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => FingerprintLoginPage(),
+              builder: (context) => MyGeoHomePage(),
             )
         );
       },

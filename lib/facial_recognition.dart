@@ -6,7 +6,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter_face_api/face_api.dart' as faceApi; // Use an alias for faceApi
+import 'package:flutter_face_api/face_api.dart' as faceApi;
+
+import 'AMS_Screen.dart';
 
 class MyFaceApp extends StatefulWidget {
   @override
@@ -23,12 +25,15 @@ class _MyFaceAppState extends State<MyFaceApp> {
   String _liveness = "nil";
   double _faceMatchScore = 0.0;
   Image imageDisplay = Image.asset('assets/images/portrait.png');
+  bool _isCheckingIn = true;
+  bool _isMatching = false;
 
   @override
   void initState() {
     super.initState();
     _currentUser = _auth.currentUser;
     checkFaceRegistration();
+    checkAttendanceStatus();
   }
 
   Future<void> checkFaceRegistration() async {
@@ -42,6 +47,27 @@ class _MyFaceAppState extends State<MyFaceApp> {
     } else {
       setState(() {
         _isFaceRegistered = false;
+      });
+    }
+  }
+
+  Future<void> checkAttendanceStatus() async {
+    var now = DateTime.now();
+    var today = now.toIso8601String().split('T')[0];
+
+    var attendanceQuery = await _firestore
+        .collection('attendance_logs')
+        .where('user_id', isEqualTo: _currentUser?.uid)
+        .where('date', isEqualTo: today)
+        .get();
+
+    if (attendanceQuery.docs.isNotEmpty) {
+      setState(() {
+        _isCheckingIn = false;
+      });
+    } else {
+      setState(() {
+        _isCheckingIn = true;
       });
     }
   }
@@ -96,7 +122,13 @@ class _MyFaceAppState extends State<MyFaceApp> {
     }
 
     var currentImageBytes = await pickedFile.readAsBytes();
+    setState(() {
+      _isMatching = true;
+    });
     await matchFaces(currentImageBytes);
+    setState(() {
+      _isMatching = false;
+    });
   }
 
   Future<void> matchFaces(Uint8List currentImageBytes) async {
@@ -128,6 +160,8 @@ class _MyFaceAppState extends State<MyFaceApp> {
         // Update Firestore only if similarity is 80% or above
         if (_faceMatchScore >= 80) {
           await logAttendance();
+        } else {
+          showAlertDialog(context, "Face doesn't match", "Please try again or contact admin.");
         }
       } else {
         setState(() {
@@ -135,14 +169,16 @@ class _MyFaceAppState extends State<MyFaceApp> {
           _faceMatchScore = 0.0;
         });
         print("No match found.");
+        showAlertDialog(context, "Face doesn't match", "Please try again or contact admin.");
       }
       await liveness();
     } catch (e) {
       print("An error occurred during face matching: $e");
       setState(() {
-        _similarity = "Error in processing";
+        _similarity = "Error in processing $e";
         _faceMatchScore = 0.0;
       });
+      showAlertDialog(context, "Error", "Attendance couldn't be logged. Try again or contact admin.");
     }
   }
 
@@ -170,14 +206,17 @@ class _MyFaceAppState extends State<MyFaceApp> {
         'liveness': _liveness,
         // Other relevant details
       });
+      showAlertDialog(context, "Attendance logged", "Checked In");
       print("Entering time logged.");
     } else {
-      // Entry for today exists, update it with leaving time
+      // Entry for today exists, update it with leaving time and similarity
       var attendanceDoc = attendanceQuery.docs.first;
       await _firestore.collection('attendance_logs').doc(attendanceDoc.id).update({
         'leaving_time': timeNow,
+        'similarity': _similarity,
       });
-      print("Leaving time logged.");
+      showAlertDialog(context, "Attendance logged", "Checked Out");
+      print("Leaving time and similarity logged.");
     }
   }
 
@@ -197,24 +236,68 @@ class _MyFaceAppState extends State<MyFaceApp> {
     }
   }
 
+  void showAlertDialog(BuildContext context, String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => AttendanceSelectionPage()),
+                  (Route<dynamic> route) => false,
+            ),
+            child: Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget createButton(String text, VoidCallback onPress) => Container(
     width: 250,
-    child: TextButton(
-      style: ButtonStyle(
-        foregroundColor: MaterialStateProperty.all<Color>(Colors.blue),
-        backgroundColor: MaterialStateProperty.all<Color>(Colors.black12),
+    child: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.blue,
+        padding: EdgeInsets.symmetric(vertical: 15),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
       ),
-      onPressed: onPress,
-      child: Text(text),
+      onPressed: _isMatching ? null : onPress,
+      child: _isMatching
+          ? Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+          SizedBox(width: 10),
+          Text("Matching..."),
+        ],
+      )
+          : Text(text, style: TextStyle(fontSize: 16)),
     ),
   );
 
   Widget createImage(image, VoidCallback onPress) => InkWell(
     onTap: onPress,
     child: Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20.0),
+        border: Border.all(color: Colors.blue, width: 2),
+      ),
+      padding: EdgeInsets.all(8.0),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20.0),
-        child: Image(height: 150, width: 150, image: image),
+        child: Image(
+          height: 200,
+          width: 200,
+          image: image,
+          fit: BoxFit.cover,
+        ),
       ),
     ),
   );
@@ -222,17 +305,20 @@ class _MyFaceAppState extends State<MyFaceApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        margin: EdgeInsets.fromLTRB(0, 0, 0, 100),
+      backgroundColor: Colors.grey[200],
+      appBar: AppBar(
+        title: Text('Face Recognition Attendance'),
+        backgroundColor: Colors.blue,
+      ),
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             createImage(imageDisplay.image, () => registerFace()),
+            SizedBox(height: 20),
             if (!_isFaceRegistered) createButton("Register Face", registerFace),
-            createButton("Recognize Face", recognizeFace),
-            Text("Similarity: $_similarity", style: TextStyle(fontSize: 18)),
-            Text("Face Match Score: ${_faceMatchScore.toStringAsFixed(2)}%", style: TextStyle(fontSize: 18)),
-            Text("Liveness: $_liveness", style: TextStyle(fontSize: 18)),
+            createButton(_isCheckingIn ? "Check In with Face" : "Check Out with Face", recognizeFace),
           ],
         ),
       ),

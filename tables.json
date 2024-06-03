@@ -1,0 +1,94 @@
+{
+    "tables": [
+      {
+        "tableName": "users",
+        "fields": [
+          {
+            "fieldName": "id",
+            "fieldType": "INT",
+            "primaryKey": true,
+            "autoIncrement": true
+          },
+          {
+            "fieldName": "uid",
+            "fieldType": "VARCHAR(255)",
+            "notNull": true
+          },
+          {
+            "fieldName": "employee_id",
+            "fieldType": "VARCHAR(255)"
+          },
+          {
+            "fieldName": "email",
+            "fieldType": "VARCHAR(255)"
+          },
+          {
+            "fieldName": "name",
+            "fieldType": "VARCHAR(255)"
+          },
+          {
+            "fieldName": "face_image_path",
+            "fieldType": "VARCHAR(255)"
+          },
+          {
+            "fieldName": "created_at",
+            "fieldType": "DATETIME",
+            "default": "CURRENT_TIMESTAMP"
+          }
+        ]
+      },
+      {
+        "tableName": "attendance_logs",
+        "fields": [
+          {
+            "fieldName": "id",
+            "fieldType": "INT",
+            "primaryKey": true,
+            "autoIncrement": true
+          },
+          {
+            "fieldName": "user_id",
+            "fieldType": "VARCHAR(255)"
+          },
+          {
+            "fieldName": "date",
+            "fieldType": "DATE"
+          },
+          {
+            "fieldName": "entering_time",
+            "fieldType": "TIME"
+          },
+          {
+            "fieldName": "leaving_time",
+            "fieldType": "TIME"
+          },
+          {
+            "fieldName": "similarity",
+            "fieldType": "DECIMAL(5,2)"
+          },
+          {
+            "fieldName": "liveness",
+            "fieldType": "VARCHAR(255)"
+          },
+          {
+            "fieldName": "method",
+            "fieldType": "VARCHAR(255)"
+          },
+          {
+            "fieldName": "name",
+            "fieldType": "VARCHAR(255)"
+          },
+          {
+            "foreignKey": {
+              "key": "user_id",
+              "references": {
+                "table": "users",
+                "field": "uid"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+  

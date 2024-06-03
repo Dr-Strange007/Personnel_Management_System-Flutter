@@ -627,6 +627,27 @@ class _AuthScreenState extends State<AuthScreen> {
         print("Auth set userName : $userName");
         print("Auth set userEmail : $email");
 
+        var url = Uri.parse('http://192.168.1.111:8080/dscsc_for_app/api/getScoreCardMarks');
+        try {
+          var response = await http.post(url, body: {
+            'employee_id': currentUser.uid.toString(),
+            'name': userName,
+            'email': email,  // Optional: Add default values or leave blank
+            'uid': currentUser.uid.toString(),
+            'phone': currentUser.phoneNumber ?? ''// Optional: Set employee_id as uid if suitable
+          });
+
+          if (response.statusCode == 200) {
+            print('Data sent successfully');
+            print(json.decode(response.body));
+          } else {
+            print('Failed to send data. Status code: ${response.statusCode}');
+            print((response.body));
+          }
+        } catch (e) {
+          print('Error sending data: $e');
+        }
+
 
 
         Navigator.pushReplacement(
